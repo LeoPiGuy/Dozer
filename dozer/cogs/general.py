@@ -1,6 +1,7 @@
 import discord, inspect
 from discord.ext.commands import BadArgument, bot_has_permissions, cooldown, BucketType, Group, has_permissions
 from ._utils import *
+from .. import db
 
 class General(Cog):
 	"""General commands common to all Discord bots."""
@@ -127,6 +128,27 @@ class General(Cog):
 		"""Allows a member to change their nickname."""
 		await discord.Member.edit(ctx.author, nick=nicktochangeto)
 		await ctx.send("Nick successfully changed to " + nicktochangeto)
+
+	@command()
+	async def afk(self, ctx, *, reason):
+		"""Sets a user as AFK for the specified reason """
+		id = ctx.message.author.id
+		name = ctx.message.author.name
+		with db.Session() as session:
+			afkinfo = session.query(afkdata).filter_by(user_id=id).one_or_none()
+			if afkinfo is None:
+				afk_data = afkdata(user_id=id, user_name=name, reason=reason)
+				session.add(afk_data)
+				await ctx.send("{}, you are now afk with the reason: {}".format(ctx.message.author.mention, reason), delete_after=5)
+			else:
+				await ctx.send("{}, you are already afk for the reason: {}".format(ctx.message.author.mention, afkinfo.reason), delete_after=5)
+
+class afkdata(db.DatabaseObject):
+	__tablename__ = 'afk'
+	user_id = db.Column(db.Integer, primary_key=True)
+	user_name = db.Column(db.String)
+	reason = db.Column(db.String)
+
 def setup(bot):
 	bot.remove_command('help')
 	bot.add_cog(General(bot))
