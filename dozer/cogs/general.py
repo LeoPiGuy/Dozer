@@ -143,6 +143,14 @@ class General(Cog):
 			else:
 				await ctx.send("{}, you are already afk for the reason: {}".format(ctx.message.author.mention, afkinfo.reason), delete_after=5)
 
+	async def on_message(self, message):
+		if message.author.bot: return
+		with db.Session() as session:
+			for mention in message.mentions:
+				afkinfo = session.query(afkdata).filter_by(user_id=mention.id).one_or_none()
+				if afkinfo is not None:
+					await message.channel.send("{} is currently afk for the reason: {}".format(afkinfo.user_name, afkinfo.reason))
+
 class afkdata(db.DatabaseObject):
 	__tablename__ = 'afk'
 	user_id = db.Column(db.Integer, primary_key=True)
