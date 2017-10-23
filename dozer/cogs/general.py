@@ -139,17 +139,25 @@ class General(Cog):
 			if afkinfo is None:
 				afk_data = afkdata(user_id=id, user_name=name, reason=reason)
 				session.add(afk_data)
-				await ctx.send("{}, you are now afk with the reason: {}".format(ctx.message.author.mention, reason), delete_after=5)
+				await ctx.send("{}, you are now afk with the reason: {}".format(ctx.message.author.mention, reason), delete_after=10)
 			else:
-				await ctx.send("{}, you are already afk for the reason: {}".format(ctx.message.author.mention, afkinfo.reason), delete_after=5)
+				await ctx.send("{}, you are already afk for the reason: {}".format(ctx.message.author.mention, afkinfo.reason), delete_after=10)
 
-	async def on_message(self, message):
+	afk.example_usage = """
+	`{prefix}afk Homework` - Sets user as AFK for the reason "Homework"
+	"""
+
+	async def on_message(self, message): # Detects if an AFK user is mentioned or if an AFK user speaks
 		if message.author.bot: return
 		with db.Session() as session:
 			for mention in message.mentions:
-				afkinfo = session.query(afkdata).filter_by(user_id=mention.id).one_or_none()
-				if afkinfo is not None:
-					await message.channel.send("{} is currently afk for the reason: {}".format(afkinfo.user_name, afkinfo.reason))
+				afkmention = session.query(afkdata).filter_by(user_id=mention.id).one_or_none()
+				if afkmention is not None:
+					await message.channel.send("{} is currently afk for the reason: {}".format(afkmention.user_name, afkmention.reason), delete_after=10)
+			afkinfo = session.query(afkdata).filter_by(user_id=message.author.id).one_or_none()
+			if afkinfo is not None:
+				await message.channel.send("{} is no longer afk!".format(afkinfo.user_name), delete_after=10)
+				session.delete(afkinfo)	
 
 class afkdata(db.DatabaseObject):
 	__tablename__ = 'afk'
