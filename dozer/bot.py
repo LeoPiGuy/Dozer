@@ -34,7 +34,7 @@ class Dozer(commands.Bot):
 			status = discord.Status.dnd
 		else:
 			status = discord.Status.online
-		await self.change_presence(game=discord.Game(name='%shelp | %d guilds' % (self.config['prefix'], len(self.guilds))), status=status)
+		await self.change_presence(activity=discord.Game(name='%shelp | %d guilds' % (self.config['prefix'], len(self.guilds))), status=status)
 	
 	async def get_context(self, message):
 		ctx = await super().get_context(message, cls=DozerContext)
